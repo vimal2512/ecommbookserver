@@ -5,6 +5,7 @@ import {
   getUserOrders,
   updateOrderStatus,
   cancelOrder,
+  placeOrder
 } from '../controllers/orderController.js';
 import { authenticateUser } from '../middlewares/authMiddleware.js';
 
@@ -15,5 +16,6 @@ router.get('/:orderId', authenticateUser, getOrderById);
 router.get('/user/:userId', authenticateUser, getUserOrders);
 router.put('/:orderId', authenticateUser, updateOrderStatus);
 router.delete('/:orderId', authenticateUser, cancelOrder);
+router.post("/", authenticateUser, placeOrder);
 
 export default router;

@@ -1,43 +1,59 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-import asyncHandler from 'express-async-handler';
-import dotenv from 'dotenv';
+import dotenv from 'dotenv'
 
 dotenv.config();
 
+export const authenticateUser = async (req, res, next) => {
+  console.log(" Received Headers:", req.headers);
 
-export const authenticateUser = asyncHandler(async (req, res, next) => {
-  let token = req.headers.authorization?.startsWith("Bearer")
-    ? req.headers.authorization.split(" ")[1]
-    : null;
-
-  if (!token) {
-    return res.status(401).json({ message: "Not authorized, no token" });
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader || !/^Bearer\s[\w-]+\.[\w-]+\.[\w-]+$/.test(authHeader)) {
+    console.log(" No valid token provided");
+    return res.status(401).json({ message: "No valid token provided" });
   }
+
+  const token = authHeader.split(" ")[1];
+  console.log(" Extracted Token:", token);
 
   try {
-    console.log("Token received:", token);
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.id).select("-password");
+    console.log("Token Verified:", decoded);
 
-    if (!req.user) {
-      return res.status(401).json({ message: "User not found, invalid token" });
+    const user = await User.findById(decoded.id).select("-password");
+
+    if (!user) {
+      console.log("User not found for ID:", decoded.id);
+      return res.status(401).json({ message: "User not found" });
     }
 
+    req.user = user;
     next();
   } catch (error) {
-    console.error("JWT Verification Error:", error.message);
-    res.status(401).json({ message: "Not authorized, token failed" });
-  }
-});
+    console.error("🚨 JWT Error:", error.message);
 
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Token expired" });
+    } else if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({ message: "Invalid token" });
+    }
 
-export const authorizeAdmin = (req, res, next) => {
-  if (req.user && req.user.isAdmin) {
-    next();
-  } else {
-    res.status(403).json({ message: 'Not authorized as an admin' });
+    res.status(401).json({ message: "Token verification failed" });
   }
 };
 
+export const authorizeAdmin = (req, res, next) => {
+  if (!req.user) {
+    console.log("Unauthorized access attempt: No user found in request");
+    return res.status(401).json({ message: "User authentication required" });
+  }
 
+  if (!req.user.isAdmin) {
+    console.log(` Access Denied: User ${req.user._id} attempted to access admin route`);
+    return res.status(403).json({ message: "Admin access required" });
+  }
+
+  console.log(`Admin Access Granted: User ${req.user._id}`);
+  next();
+};

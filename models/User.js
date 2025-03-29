@@ -30,6 +30,7 @@ export const validateUser = (user) => {
   return schema.validate(user, { abortEarly: false });
 };
 
+
 const User = mongoose.model('User', userSchema);
 export default User;
 
