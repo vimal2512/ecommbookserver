@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 import Joi from 'joi';
-
 const bookSchema = new mongoose.Schema({
   title: { type: String, required: true },
   author: { type: String, required: true },
@@ -17,8 +16,6 @@ const bookSchema = new mongoose.Schema({
     }
   ]
 }, { timestamps: true });
-
-
 export const validateBook = (books) => {
   const schema = Joi.array().items(
     Joi.object({
