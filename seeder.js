@@ -79,7 +79,7 @@ const INITIAL_BOOK_LIST = [
 const seedDatabase = async () => {
   try {
     await mongoose.connect(MONGO_URI);
-    console.log('✅ MongoDB Connected for Seeding');
+    console.log(' MongoDB Connected for Seeding');
 
     // Clear existing data
     await Book.deleteMany();
@@ -87,7 +87,7 @@ const seedDatabase = async () => {
 
     // Insert new books
     await Book.insertMany(INITIAL_BOOK_LIST);
-    console.log('📚 Books Seeded Successfully');
+    console.log('Books Seeded Successfully');
 
     // Disconnect after completion
     mongoose.connection.close();
